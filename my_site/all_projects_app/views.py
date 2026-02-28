@@ -1,6 +1,6 @@
 from .serializer import (HousePredictSerializer, DiabetesPredictSerializer,
                         AvacadoSerializer, BankPredictSerializer, TitanicSerializer,
-                        MushroomSerializer, TelecomSerializer)
+                        MushroomSerializer, TelecomSerializer, StudentPerformanceSerializer)
 import os
 import  joblib
 from django.conf import settings
@@ -50,8 +50,6 @@ diabetes_model = joblib.load(model_path)
 
 scaler_path = os.path.join(settings.BASE_DIR, 'diabetes_scalers.pkl')
 diabetes_scaler = joblib.load(scaler_path)
-
-
 
 
 class DiabetesPredict(views.APIView):
@@ -443,4 +441,121 @@ class TelecomPredict(views.APIView):
             }, status=status.HTTP_200_OK)
 
         return Response(instance.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+model_path = os.path.join(settings.BASE_DIR, 'my_site/hremploye_model.pkl')
+model = joblib.load(model_path)
+
+scaler_path = os.path.join(settings.BASE_DIR, 'my_site/hremploye_scaler.pkl')
+scaler = joblib.load(scaler_path)
+
+BusinessTravel_list = ['Travel_Frequently', 'Travel_Rarely']
+Department_list = ['Research & Development', 'Sales']
+EducationField_list = ['Life Sciences', 'Marketing', 'Medical', 'Other', 'Technical Degree']
+Gender_list = ['Male']
+JobRole_list = ['Human Resources', 'Laboratory Technician', 'Manager', 'Manufacturing Director',
+    'Research Director', 'Research Scientist', 'Sales Executive', 'Sales Representative']
+MaritalStatus_list = ['Married', 'Single']
+OverTime_list = ['Yes']
+
+
+class HREmployeePredictAPIView(views.APIView):
+    def post(self, request):
+        try:
+            data_dict = request.data.copy()
+            BusinessTravel = data_dict.pop('BusinessTravel')
+            BusinessTravel_encoded = [1 if BusinessTravel == i else 0 for i in BusinessTravel_list]
+
+            Department = data_dict.pop('Department')
+            Department_encoded = [1 if Department == i else 0 for i in Department_list]
+
+            EducationField = data_dict.pop('EducationField')
+            EducationField_encoded = [1 if EducationField == i else 0 for i in EducationField_list]
+
+            Gender = data_dict.pop('Gender')
+            Gender_encoded = [1 if Gender == i else 0 for i in Gender_list]
+
+            JobRole = data_dict.pop('JobRole')
+            JobRole_encoded = [1 if JobRole == i else 0 for i in JobRole_list]
+
+            MaritalStatus = data_dict.pop('MaritalStatus')
+            MaritalStatus_encoded = [1 if MaritalStatus == i else 0 for i in MaritalStatus_list]
+
+
+            OverTime = data_dict.pop('OverTime')
+            OverTime_encoded = [1 if OverTime == i else 0 for i in OverTime_list]
+
+            final_data = (list(data_dict.values()) + BusinessTravel_encoded + Department_encoded
+                + EducationField_encoded + Gender_encoded + JobRole_encoded+ MaritalStatus_encoded
+                + OverTime_encoded)
+
+            scaled = scaler.transform([final_data])
+            pred = model.predict(scaled)[0]
+            answer = "Will Leave" if pred == 1 else "Will Stay"
+
+            return Response({"prediction": answer})
+
+
+        except Exception as e:return Response({"error": str(e)},
+                                              status=status.HTTP_400_BAD_REQUEST)
+
+
+
+model_path=os.path.join(settings.BASE_DIR,'my_site/student_model.pkl')
+model=joblib.load(model_path)
+
+scaler_path=os.path.join(settings.BASE_DIR,'my_site/student_scaler.pkl')
+scaler=joblib.load(scaler_path)
+
+
+gender_list=['male']
+race_list=['group B','group C','group D','group E']
+parent_edu_list=[
+"bachelor's degree",
+'high school',
+"master's degree",
+'some college',
+'some high school'
+]
+lunch_list=['standard']
+test_course_list=['none']
+
+
+class StudentPredictAPIView(views.APIView):
+    def post(self,request):
+        serializer=StudentPerformanceSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                data_dict=serializer.validated_data.copy()
+
+                gender=data_dict.pop('gender')
+                gender_encoded=[1 if gender==i else 0 for i in gender_list]
+
+                race=data_dict.pop('race_ethnicity')
+                race_encoded=[1 if race==i else 0 for i in race_list]
+
+                parent=data_dict.pop('parental_level_of_education')
+                parent_encoded=[1 if parent==i else 0 for i in parent_edu_list]
+
+                lunch=data_dict.pop('lunch')
+                lunch_encoded=[1 if lunch==i else 0 for i in lunch_list]
+
+                course=data_dict.pop('test_preparation_course')
+                course_encoded=[1 if course==i else 0 for i in test_course_list]
+
+                final_data=(
+                    list(data_dict.values())+gender_encoded+race_encoded+parent_encoded+lunch_encoded+
+                    course_encoded
+                )
+
+                scaled=scaler.transform([final_data])
+                pred=model.predict(scaled)[0]
+                return Response({
+                    "prediction":pred
+                })
+
+            except Exception as e:
+                return Response({"error":str(e)},status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
 

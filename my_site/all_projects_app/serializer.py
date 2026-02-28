@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import House,  DiabetesPrediction, Avacado, Bank, Titanic, Mushroom, Telecom
+from .models import (House,  DiabetesPrediction, Avacado, Bank, Titanic, Mushroom, Telecom,
+                     HREmployeePrediction, StudentPerformance)
 
 class HousePredictSerializer(serializers.ModelSerializer):
     class Meta:
@@ -41,3 +42,15 @@ class TelecomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Telecom
         fields = '__all__'
+
+
+class HremployeeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HREmployeePrediction
+        fields = '__all__'
+
+class StudentPerformanceSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = StudentPerformance
+        fields='__all__'

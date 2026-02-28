@@ -1,9 +1,12 @@
 from django.urls import path, include
-from .views import HousePredict, DiabetesPredict, AvacadoPredict, BankPredict, TitanicPredict, MushroomPredict, TelecomPredict
+from .views import (HousePredict, DiabetesPredict, AvacadoPredict, BankPredict, TitanicPredict,
+                    MushroomPredict, TelecomPredict)
 from rest_framework import routers
 
 router = routers.SimpleRouter()
+
 urlpatterns = [
+    path('', include(router.urls)),
     path('house', HousePredict.as_view(), name='house_model'),
     path('diabetes', DiabetesPredict.as_view(), name='diabetes_model'),
     path('avacado', AvacadoPredict.as_view(), name='avacado_model'),
